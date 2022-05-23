@@ -35,3 +35,4 @@ About the infrastructure,  below a diagram that briefly explains the architectur
 ![image info](./pictures/detail_arch.png)
 
 The application is currently available at: https://timeoff.gorilla-test.com/
+And the repository where original web application where forked at: https://github.com/mendinuetaj/gorilla-timeoff
