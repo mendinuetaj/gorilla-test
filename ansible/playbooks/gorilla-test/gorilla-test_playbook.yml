@@ -1,0 +1,58 @@
+---
+- name: Register gorilla instances on hostgroups
+  hosts: localhost
+  vars_files:
+    - "vars/prd/app_vars.yml"
+  tasks:
+    - name: filter and register web instances
+      ec2_instance_info:
+        region: us-east-1
+        filters:
+          "tag:app": "{{ app }}"
+          instance-state-name: [ "running"]
+      register: time_off_instance_info
+
+    - name: filter and register bastion instance
+      ec2_instance_info:
+        region: us-east-1
+        filters:
+          "tag:app": "{{ bastion }}"
+          instance-state-name: [ "running"]
+      register: bastion_instance_info
+
+    - name: add time-off group
+      add_host:
+        hostname: "{{ item.private_ip_address }}"
+        groups:
+          - "{{ app }}"
+      with_items: "{{ time_off_instance_info.instances }}"
+
+    - name: add bastion group
+      add_host:
+        hostname: "{{ item.private_ip_address }}"
+        groups:
+          - "{{ bastion }}"
+      with_items: "{{ bastion_instance_info.instances }}"
+
+- name: GORILLA BASTION INSTANCE PROVISIONING PLAY
+  hosts: "{{ bastion }}"
+  become: true
+  gather_facts: false
+  vars_files:
+    - "vars/prd/app_vars.yml"
+  roles:
+    - role: administrable
+
+- name: GORILLA WEB INSTANCE PROVISIONING PLAY
+  hosts: "{{ app }}"
+  become: true
+  gather_facts: false
+  vars_files:
+    - "vars/prd/app_vars.yml"
+  roles:
+    - role: administrable
+  tasks:
+    - name: Provisioning instances
+      include_tasks: gorilla-test_web_provisioning_tasks.yml
+
+

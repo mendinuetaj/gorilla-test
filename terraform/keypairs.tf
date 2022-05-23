@@ -1,0 +1,9 @@
+resource "aws_key_pair" "gorilla-keypair" {
+  key_name = "gorilla-keypair"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDCE+OyEfsGYQgJH7UJ3Xti5/pQeckvDdNFB5IrVRL8o4OmdqjvbNnCaqB1LiMLB30y2C/Bsq0yXSsuk6iKVfksl6b0z0CMRNTZ2Gu9YPqD8bnTW1zRZ1oKgmGex8hsUsUvBOSB+uAR+w+nQnrtic6WG3khoyfmE4cLgGyCwyWu1RjSR2NmWBfAfbHDH8Oq1JRsdCAImC2b5UVX6cUKUpgLEhzt/LZxfLSDnVOp2kLvtUwzlafpY6LMAWJF/UTEG3fFNiG4kDqcbj8pZ0YPqT5j/J1GG3WlBn6f+06UAntEKTo+aIY6Q0dH7byzNJafn72zuQmvE6CDPlQppjwk9+A3fdlhbbjmA+N1TYaHRg8iscvAJmgnHehnIKRHlDboJURXJnWbssB4EnmAaL3JyUt8Daj7D3/VOre2Cci9wrewY3KdpTEg4X6qcZWbFnONPBg1fu37OCOEemMW5dXu8A4wf2vqrJzI04WHwyqzOHqKmM6ZVafJ9MiIMnq3iq5GPjE= jose@jose-ms7a38"
+}
+
+
+
+
+

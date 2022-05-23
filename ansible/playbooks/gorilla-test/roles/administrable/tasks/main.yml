@@ -1,0 +1,52 @@
+- name: Create admin group
+  become: true
+  group:
+    name: admin
+    state: present
+
+- name: Attach admin group to sudoers
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%admin'
+    line: '%admin ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Create admin user gorilla-admin
+  become: true
+  user:
+    name: gorilla-admin
+    comment: gorilla admin
+
+
+- name: Configure gorilla-admin user public key
+  become: true
+  authorized_key:
+    key: "{{ lookup('file', 'files/gorilla-admin.pub') }}"
+    state: present
+    user: gorilla-admin
+
+- name: Add above user to admin group
+  user:
+    name=gorilla-admin
+    groups=admin
+    append=yes
+    state=present
+    createhome=yes
+
+- name: Copy priv id_rsa keys
+  copy:
+    src: files/gorilla-admin.key
+    dest: /home/gorilla-admin/.ssh/id_rsa
+    owner: gorilla-admin
+    group: admin
+    mode: 0600
+
+- name: Copy pub id_rsa keys
+  copy:
+    src:  files/gorilla-admin.pub
+    dest: /home/gorilla-admin/.ssh/id_rsa.pub
+    owner: gorilla-admin
+    group: admin
+    mode: 0600

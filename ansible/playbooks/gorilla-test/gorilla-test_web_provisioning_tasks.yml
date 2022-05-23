@@ -1,0 +1,140 @@
+- name: run an update
+  raw: yum update -y
+
+- name: run an upgrade
+  raw: yum upgrade -y
+
+- name: install python
+  raw: yum install python3 -y
+
+- name: link python
+  raw: ln -sf /usr/bin/python3.7 /usr/bin/python3
+
+- name: Ensure boto and boto3 modules are installed
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - boto3
+    - botocore
+
+- name: Enable epel repositories
+  become: yes
+  shell: amazon-linux-extras install epel -y
+
+- name: Install yum packages
+  become: yes
+  yum:
+    name:
+      - git
+      - sqlite
+      - nginx
+      - telnet
+      - supervisor
+      - "@Development tools"
+    update_cache: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python2
+
+- name: check if nvm.sh file exists
+  become_user: gorilla-admin
+  stat:
+    path: ~/.nvm/nvm.sh
+  register: nvm_script
+
+- name: nvm
+  become_user: gorilla-admin
+  shell: |
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+  when: nvm_script.stat.exists == false
+
+- name: Change nvm.sh file permissions
+  become_user: gorilla-admin
+  file:
+    path: ~/.nvm/nvm.sh
+    state: touch
+    mode: u=rwx,g=r,o=r
+
+- name: activate nvm and install node
+  become_user: gorilla-admin
+  shell: |
+      ~/.nvm/nvm.sh
+      source ~/.nvm/nvm.sh
+      nvm install 14
+      nvm use 14
+
+
+
+- name: Creates src directory
+  become_user: gorilla-admin
+  file:
+    path: ~/src
+    state: directory
+
+- name: check if time-off sources exist
+  become_user: gorilla-admin
+  stat:
+    path: ~/src/.git
+  register: sources_found
+
+- name: Clone time-off repo
+  become_user: gorilla-admin
+  git:
+    repo: git@github.com:mendinuetaj/gorilla-timeoff.git
+    dest: ~/src
+    accept_hostkey: yes
+    version: master
+  when: sources_found.stat.exists == false
+
+- name: Install time-off app
+  become_user: gorilla-admin
+  shell: |
+    source ~/.nvm/nvm.sh
+    nvm use 14
+    cd /home/gorilla-admin/src
+    npm install
+
+- name: Transfer supervisord files to the server
+  copy:
+    src: files/supervisord/supervisord.conf
+    dest: /etc/
+
+- name: Transfer supervisord app starter files to the server
+  become_user: gorilla-admin
+  copy:
+    src: files/shell_scripts/supervisord_start_app.sh
+    dest: ~/
+    mode: '764'
+
+- name: Transfer web hook request processor to the server
+  become_user: gorilla-admin
+  copy:
+    src: files/shell_scripts/web_hook_push_request_processor.sh
+    dest: ~/
+    mode: '764'
+
+- name: Transfer web hook executable to the server
+  become: yes
+  copy:
+    src: files/web_hook/web_hook
+    dest: /usr/local/bin
+    mode: '500'
+
+- name: Restarting supervisord
+  service: name=supervisord state=restarted
+  tags: supervisord
+
+- name: Transfer app nginx files to the server
+  copy:
+    src: files/nginx/timeoff.gorilla-test.com.conf
+    dest: /etc/nginx/conf.d
+
+- name: Transfer nginx files to the server
+  copy:
+    src: files/nginx/nginx.conf
+    dest: /etc/nginx
+
+- name: Restarting nginx
+  service: name=nginx state=restarted
+  tags: nginx
+
+
